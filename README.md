@@ -117,9 +117,9 @@ The script has been written to be self-documented and should be fairly easy to f
 
 3. **if** today is the 1st of the month, send a monthly backup email
 
-4. Delete backups older than 2 weeks, unless it is a 1st of the month
+4. Archive 1st of month backups into the `/Archives` sub-directory as `.tar.xz`
 
-5. Archive 1st of month backups into the `/Archives` sub-directory as `.tar.xz`
+5. Delete backups older than 2 weeks
 
 ### Current Limitations
 
