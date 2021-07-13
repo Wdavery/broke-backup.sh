@@ -102,7 +102,6 @@ else
 	for i in "${FOLDERS[@]}"; do
 		FOLDER="${i##*/}"
 		tree "$i" ${OPTIONS[$x]} >"$BACKUP/$NOW/$FOLDER.txt" && echo "$FOLDER Completed"
-		touch --date="" "$BACKUP/$NOW/$FOLDER.txt"
 		((x++))
 	done
 	touch --date= "$BACKUP/$NOW"
