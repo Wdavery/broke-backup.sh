@@ -1,5 +1,14 @@
 #!/bin/bash
-# Version 1.0
+#  _               _               _                _                     _
+# | |             | |             | |              | |                   | |
+# | |__  _ __ ___ | | _____ ______| |__   __ _  ___| | ___   _ _ __   ___| |__
+# | '_ \| '__/ _ \| |/ / _ \______| '_ \ / _` |/ __| |/ / | | | '_ \ / __| '_ \
+# | |_) | | | (_) |   <  __/      | |_) | (_| | (__|   <| |_| | |_) |\__ \ | | |
+# |_.__/|_|  \___/|_|\_\___|      |_.__/ \__,_|\___|_|\_\\__,_| .__(_)___/_| |_|
+#                                                             | |
+#                                                             |_|
+# Version 1.1
+
 #This script is designed to maintain a tree-style .txt backup of specified folders.
 #By default, it will keep daily backups for 14 days and archive monthly backups indefinitely (as .tar.xz).
 #On the first of the month it will email a .tar.xz archive as an extra backup location. 
