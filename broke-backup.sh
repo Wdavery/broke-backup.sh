@@ -119,17 +119,6 @@ fi
 # Clean Up
 #
 ####################
-#Find and delete files older than 13 days that are NOT the first day of a month
-while read -r fclean; do
-	rm -r "$BACKUP/$fclean" && PURGED=TRUE
-	echo "Removed $fclean - Reason: older than 2 weeks and not 1st of month"
-done < <(find $BACKUP -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -not -iname "****-**-01*" -printf "%P\n")
-if [ $PURGED = TRUE ]; then
-	echo "Purge completed"
-else
-	echo "No purge required"
-fi
-
 #Find 1st of month backups, archive as DATE.tar.xz, delete originals
 while read -r fname; do
 	find "$BACKUP/$fname" -printf "%P\n" | tar -cJf "$BACKUP/$fname".tar.xz -C "$BACKUP/$fname"/ --remove-files -T -
@@ -141,6 +130,17 @@ if [ $ARCHIVED = TRUE ]; then
 	echo "Archive completed"
 else
 	echo "No archive required"
+fi
+
+#Find and delete files older than 13 days
+while read -r fclean; do
+	rm -r "$BACKUP/$fclean" && PURGED=TRUE
+	echo "Removed $fclean - Reason: older than 2 weeks"
+done < <(find $BACKUP -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
+if [ $PURGED = TRUE ]; then
+	echo "Purge completed"
+else
+	echo "No purge required"
 fi
 
 #Cleanup Completion
