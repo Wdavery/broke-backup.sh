@@ -9,38 +9,41 @@
 #                                                             |_|
 # Version 1.1
 #
-# This script is designed to maintain a tree-style .txt backup of specified folders.
-# By default, it will keep daily backups for 14 days and archive monthly backups indefinitely (as .tar.xz).
+# This script is designed to maintain a tree-style .txt backup of specified SOURCES.
+# By default, it will keep 14 daily backups and archive monthly backups indefinitely (as .tar.xz).
 # On the first of the month it will email a .tar.xz archive as an extra backup location. 
 #
-# File modification times will be set to 00:00 of the current day for ease of backup directory maintenance.
+# Folder modification times will be set to 00:00 of the current day for ease of backup directory maintenance.
+# This allows the cleanup function to operate correctly despite inconsistences in script run times. 
 #
 ####################
-# Required Dependencies:
+# Required dependencies:
 # - tree
 # - mutt
 # - xz-utils
 ####################
 #
-# User Defined Variables
+# User-defined Options
 #
 ####################
-# Set backup directory: "/example/location/backup"
-BACKUP="/path/to/backup/directory"
+# Set backup output directory: "/example/location/backup"
+BACKUP_DIR="/path/to/backup/directory"
 # Recipient email
-EMAIL=mail@example.com
+EMAIL="mail@example.com"
 # Email subject
 SUBJECT="Your Backup Has Arrived! 💾"
-# Folders to backup. Add as many as needed; including full path for each.
-# One per line, and each enclosed in quotes                  "/example/folder/1" \
-# All but last line need to end with a space and backslash   "/example/folder/2" \
-# Last line ends in closing parenthesis                      "/example/folder/3")
-FOLDERS=(\
+# Directories to backup. Add as many as needed; including full path for each.
+# One per line, and each enclosed in quotes                  "/example/dir/1" \
+# All but last line need to end with a space and backslash   "/example/dir/2" \
+# Last line ends in closing parenthesis                      "/example/dir/3")
+#TODO - migrate to individual declarations, eg. SOURCES[0]="/example/Media/ISOs"
+SOURCES=(\
 "/example/Media/TV Shows" \
 "/example/Media/Movies" \
 "/example/Media/ISOs")
 # Depth of tree output for each folder defined above, in order, seperated by spaces.
-# Ex. for 3 folders: (1 1 3)
+# Example for 3 sources: DEPTH=(1 1 3)
+#TODO - migrate to individual declarations, eg. DEPTH[0]=1
 DEPTH=(1 2 1)
 # Monthly email body (Enclosed in quotes; '\n' for a new line)
 MONTHLY="Another month, another set of backups:"
@@ -64,19 +67,20 @@ CUSTOM_OPTIONS=("-d -L 1" "-d" "-d" "-d" "-d" "-d")
 # System Variables
 #
 ####################
-TODAY=$(date +"%Y-%m-%d")
-PURGED=FALSE
-ARCHIVED=FALSE
+today=$(date +"%Y-%m-%d")
+purged=FALSE
+archived=FALSE
 
 ####################
 #
 # Functions
 #
 ####################
-send_email () {
-	tar -cJf "$BACKUP/$TODAY.tar.xz" -C $BACKUP "$TODAY"
-	echo -e "$BODY" | mutt -s "$SUBJECT" -a "$BACKUP/$TODAY.tar.xz" -- $EMAIL && echo "Email sent to $EMAIL"
-	rm -r "$BACKUP/$TODAY.tar.xz"
+#TODO - migrate to passing $BODY to the function, instead of declaring $BODY prior to calling function
+send_mail () {
+	tar -cJf "$BACKUP_DIR/$today.tar.xz" -C $BACKUP_DIR "$today"
+	echo -e "$BODY" | mutt -s "$SUBJECT" -a "$BACKUP_DIR/$today.tar.xz" -- $EMAIL && echo "Email sent to $EMAIL"
+	rm -r "$BACKUP_DIR/$today.tar.xz"
 }
 set_tree_options () {
 	if [ $USE_CUSTOM = TRUE ]; then
@@ -95,25 +99,25 @@ set_tree_options () {
 # Tree Backup
 #
 ####################
-# If today's folder already exists, skip backup and force email.
+# If today's directory already exists, skip backup and force email.
 # Otherwise complete backup and send email if first of the month.
-if [ -d "$BACKUP/$TODAY" ]; then
-	echo "Today's backup already created, skipping. Forcing email:"
+if [ -d "$BACKUP_DIR/$today" ]; then
+	echo "today's backup already created, skipping. Forcing email:"
 	BODY="$FORCED"
-	send_email
+	send_mail
 else
+	mkdir "$BACKUP_DIR/$today"
 	set_tree_options
-	mkdir "$BACKUP/$TODAY"
 	x=0
-	for i in "${FOLDERS[@]}"; do
-		FOLDER="${i##*/}"
-		tree "$i" ${OPTIONS[$x]} >"$BACKUP/$TODAY/$FOLDER.txt" && echo "$FOLDER Completed"
+	for i in "${SOURCES[@]}"; do
+		source="${i##*/}"
+		tree "$i" ${OPTIONS[$x]} >"$BACKUP_DIR/$today/$source.txt" && echo "$source Completed"
 		((x++))
 	done
-	touch --date= "$BACKUP/$TODAY"
+	touch --date= "$BACKUP_DIR/$today"
 	if [ "$(date +"%d")" = 01 ]; then
 		BODY="$MONTHLY"
-		send_email
+		send_mail
 	fi
 fi
 	
@@ -124,29 +128,30 @@ fi
 ####################
 # Find 1st of month backups, archive as DATE.tar.xz, delete originals
 while read -r fname; do
-	find "$BACKUP/$fname" -printf "%P\n" | tar -cJf "$BACKUP/$fname".tar.xz -C "$BACKUP/$fname"/ --remove-files -T -
-	mv "$BACKUP/$fname".tar.xz "$BACKUP/Archive" && echo "Packed '$fname' into Archives/$fname.tar.xz, removed originals"
-	rmdir "$BACKUP/${fname:?}" && ARCHIVED=TRUE
-done < <(find $BACKUP -maxdepth 1 -mtime +13 -type d -iname "****-**-01*" -printf "%P\n")
-if [ $ARCHIVED = TRUE ]; then
+	find "$BACKUP_DIR/$fname" -printf "%P\n" | tar -cJf "$BACKUP_DIR/$fname".tar.xz -C "$BACKUP_DIR/$fname"/ --remove-files -T -
+	mv "$BACKUP_DIR/$fname".tar.xz "$BACKUP_DIR/Archive" && echo "Packed '$fname' into Archives/$fname.tar.xz, removed originals"
+	rmdir "$BACKUP_DIR/${fname:?}" && archived=TRUE
+done < <(find $BACKUP_DIR -maxdepth 1 -mtime +13 -type d -iname "****-**-01*" -printf "%P\n")
+if [ $archived = TRUE ]; then
 	echo "Archive completed"
 else
 	echo "No archive required"
 fi
 
+# Find and delete backups older than 13 days
 # Find and delete files older than 13 days
 while read -r fclean; do
-	rm -r "$BACKUP/$fclean" && PURGED=TRUE
+	rm -r "$BACKUP_DIR/$fclean" && purged=TRUE
 	echo "Removed $fclean - Reason: older than 2 weeks"
-done < <(find $BACKUP -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
-if [ $PURGED = TRUE ]; then
+done < <(find $BACKUP_DIR -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
+if [ $purged = TRUE ]; then
 	echo "Purge completed"
 else
 	echo "No purge required"
 fi
 
 # Cleanup Completion
-if [ $PURGED = TRUE -o $ARCHIVED = TRUE ]; then
+if [ $purged = TRUE -o $archived = TRUE ]; then
 	echo "All cleanup tasks completed" 
 else
 	echo "No cleanup tasks required"
