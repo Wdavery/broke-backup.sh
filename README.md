@@ -67,20 +67,6 @@ It keeps 14 days of live (uncompressed) backups, and archives monthly backups in
 
 There are 7 basic options:
 
-```bash
-recipient_email="mail@example.com"
-email_subject="Your Backup Has Arrived! 💾"
-monthly_email_body="Another month, another set of backups:"
-forced_email_body="Monthly emails aren't enough for you?!\nHere's your backup:"
-output_dir="/path/to/output/directory"
-SOURCES[0]="/example/Media/TV Shows"
-SOURCES[1]="/example/Media/Movies"
-SOURCES[2]="/example/Media/ISOs"
-DEPTH[0]=1
-DEPTH[1]=2
-DEPTH[2]=1
-```
-
 - `recipient_email` - Recipient email address
 
 - `email_subject` - The subject for sent emails
