@@ -32,19 +32,15 @@ BACKUP_DIR="/path/to/backup/directory"
 EMAIL="mail@example.com"
 # Email subject
 SUBJECT="Your Backup Has Arrived! 💾"
-# Directories to backup. Add as many as needed; including full path for each.
-# One per line, and each enclosed in quotes                  "/example/dir/1" \
-# All but last line need to end with a space and backslash   "/example/dir/2" \
-# Last line ends in closing parenthesis                      "/example/dir/3")
-#TODO - migrate to individual declarations, eg. SOURCES[0]="/example/Media/ISOs"
-SOURCES=(\
-"/example/Media/TV Shows" \
-"/example/Media/Movies" \
-"/example/Media/ISOs")
-# Depth of tree output for each folder defined above, in order, seperated by spaces.
-# Example for 3 sources: DEPTH=(1 1 3)
-#TODO - migrate to individual declarations, eg. DEPTH[0]=1
-DEPTH=(1 2 1)
+# Directories to backup. Add as many as needed; including full path for each
+# Numbering begins at 0, eg. SOURCES[0]="/example/Media/ISOs"
+SOURCES[0]="/example/Media/TV Shows"
+SOURCES[1]="/example/Media/Movies"
+SOURCES[2]="/example/Media/ISOs"
+# Depth of tree output for each source defined above, eg. DEPTH[0]=1
+DEPTH[0]=1
+DEPTH[1]=2
+DEPTH[2]=1
 # Monthly email body (Enclosed in quotes; '\n' for a new line)
 MONTHLY="Another month, another set of backups:"
 # Forced email body
