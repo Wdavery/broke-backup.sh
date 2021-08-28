@@ -9,7 +9,7 @@
 #                                                             |_|
 # Version 1.1
 #
-# This script is designed to maintain a tree-style .txt backup of specified SOURCES.
+# This script is designed to maintain a tree-style .txt backup of specified directories.
 # By default, it will keep 14 daily backups and archive monthly backups indefinitely (as .tar.xz).
 # On the first of the month it will email a .tar.xz archive as an extra backup location. 
 #
