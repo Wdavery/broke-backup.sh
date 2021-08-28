@@ -47,9 +47,9 @@ This example is a movie folder set to a depth of 2 (list the `Movies` folder and
 
 #### Example Backup Folder
 
-This is my personal backup folder, that has been running since October 2020. It backs up 6 locations—14 TiB of 40k files—into a 4.2 MiB Backup directory. A single archived backup is ~60 KiB.
+This is my personal backup folder, that has been running since October 2020, as of July 2021. It backs up 6 locations—14 TiB of 40k files—into a 4.2 MiB Backup directory. A single archived backup is ~60 KiB.
 
-It keeps 14 days worth of "live" backups, and archives a single backup monthly, indefinitely. 
+It keeps 14 days of live (uncompressed) backups, and archives monthly backups indefinitely. 
 
 ![broke-backup-output.png](broke-backup-output.png)
 
@@ -68,25 +68,26 @@ It keeps 14 days worth of "live" backups, and archives a single backup monthly, 
 There are 7 basic options:
 
 ```bash
-BACKUP="/path/to/backup/directory"
-EMAIL=mail@example.com
+BACKUP_DIR="/path/to/backup/directory"
+EMAIL="mail@example.com"
 SUBJECT="Your Backup Has Arrived! 💾"
-FOLDERS=(\
-"/path/to/include" \
-"/path/to/backup" \
-"/another/path")
-DEPTH=(1 2 3)
+SOURCES[0]="/example/Media/TV Shows"
+SOURCES[1]="/example/Media/Movies"
+SOURCES[2]="/example/Media/ISOs"
+DEPTH[0]=1
+DEPTH[1]=2
+DEPTH[2]=1
 MONTHLY="Another month, another set of backups:"
 FORCED="Monthly emails aren't enough for you?!\nHere's your backup:"
 ```
 
-- `BACKUP` - Output directory for backup
+- `BACKUP_DIR` - Output directory for backup
 
 - `EMAIL` - Recipient email address
 
 - `SUBJECT` - The subject for sent emails
 
-- `FOLDERS` - A list of folders to backup 
+- `SOURCES` - A list of folders to backup 
 
 - `DEPTH` - Depth settings for the above folders
 
@@ -100,7 +101,9 @@ For advanced users, you can specify custom tree options per folder. Setting `USE
 
 ```bash
 USE_CUSTOM=TRUE
-CUSTOM_OPTIONS=("-d -L 1" "-a" "-a -L 4")
+CUSTOM_OPTIONS[0]="-d -L 1"
+CUSTOM_OPTIONS[1]="-a"
+CUSTOM_OPTIONS[2]="-a -L 4"
 ```
 
 #### Scheduling
