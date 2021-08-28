@@ -55,8 +55,10 @@ FORCED="Monthly emails aren't enough for you?!\nHere's your backup:"
 # If you're not sure what this is, leave set to 'FALSE'
 # Enabling this will overwrite DEPTH settings above
 USE_CUSTOM=FALSE
-# Separated by spaces, enclosed in quotes '("-d -L 1" "-a" "-a -L 4")'
-CUSTOM_OPTIONS=("-d -L 1" "-d" "-d" "-d" "-d" "-d")
+# Options for tree for each source defined above, eg. CUSTOM_OPTIONS[0]="-d -L 1"
+CUSTOM_OPTIONS[0]="-d -L 1"
+CUSTOM_OPTIONS[1]="-a"
+CUSTOM_OPTIONS[2]="-a -L 4"
 
 ####################
 #
