@@ -12,9 +12,9 @@
 
 This script is meant to give a little bit of security to that replaceable data by recording the directory contents using a standard Unix command: [tree](http://mama.indstate.edu/users/ice/tree/). It will output these trees to a user-defined backup folder, and will email monthly archived backups to cover catastrophic loss.
 
-If you're unfamiliar with `tree`, don't worry; this script takes care of the most common use-cases for you. The core concept is that it recursively lists directory contents, and can be output to a text file. For advanced users, it has many custom options you can find at its [man page](http://mama.indstate.edu/users/ice/tree/tree.1.html). 
+If you're unfamiliar with `tree`, don't worry; this script takes care of the most common use-cases for you. The core concept is that it recursively lists directory contents, and can be output to a text file. For advanced users, it has many custom options that can be found at its [man page](http://mama.indstate.edu/users/ice/tree/tree.1.html). 
 
-**Disclaimer:** Despite the 'backup' in the name, this will not protect your data. This is essentially a disaster recovery assistant. If/when disaster strikes, you may lose your files, but you will know exactly *what* you lost.
+**Disclaimer:** Despite 'backup' being in the name, this will not protect your data. This is essentially a disaster recovery assistant. If/when disaster strikes, you may lose your files, but you will know exactly *what* you lost.
 
 #### Example Tree Output
 
@@ -65,28 +65,28 @@ It keeps 14 days of live (uncompressed) backups, and archives monthly backups in
 
 ##### Configuration
 
-There are 7 basic options:
+There are 7 basic config settings:
 
 - `recipient_email` - Recipient email address
 
 - `email_subject` - The subject for sent emails
 
-- `monthly_email_body` - The body of the monthly backup email
+- `monthly_email_body` - The body of the monthly email
 
-- `forced_email_body` - The body of the forced backup email
+- `forced_email_body` - The body of the forced email
 
-- `output_dir` - Output directory for backup
+- `output_dir` - Output directory for backups
 
-- `SOURCES` - A list of folders to backup 
+- `SOURCES` - List of directories to backup 
 
-- `DEPTH` - Depth settings for the above folders
+- `DEPTH` - Depth settings for the above sources
 
 ###### Advanced Tree Settings
 
-For advanced users, you can specify custom tree options per folder. Setting `USE_CUSTOM` to `TRUE` will override the `DEPTH` settings in the basic config.
+To accommodate advanced uses, specifying custom tree options per source is supported.
+Setting `USE_CUSTOM=TRUE` will override the `DEPTH` settings of the basic config with `CUSTOM_OPTIONS`
 
 ```bash
-USE_CUSTOM=TRUE
 CUSTOM_OPTIONS[0]="-d -L 1"
 CUSTOM_OPTIONS[1]="-a"
 CUSTOM_OPTIONS[2]="-a -L 4"
@@ -94,9 +94,9 @@ CUSTOM_OPTIONS[2]="-a -L 4"
 
 #### Scheduling
 
-broke-backup.sh relies a daily job schedule. It could run less often, or purely on a manual basis and will work just fine.
+broke-backup.sh is designed on a daily job schedule. It will also happily run less often, or purely on a manual basis.
 
-Suggested config is to set a cron job to run the script daily, shortly after midnight. My personal config runs every day at 00:25
+Suggested config is to set a cron job to run the script daily. My personal config runs every day at 00:25
 
 ### Logic Overview
 
