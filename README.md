@@ -1,3 +1,4 @@
+```
   _               _               _                _                     _
  | |             | |             | |              | |                   | |
  | |__  _ __ ___ | | _____ ______| |__   __ _  ___| | ___   _ _ __   ___| |__
@@ -6,7 +7,7 @@
  |_.__/|_|  \___/|_|\_\___|      |_.__/ \__,_|\___|_|\_\\__,_| .__(_)___/_| |_|
                                                              | |
                                                              |_|
-
+```
 ***broke-backup.sh*** was born out of necessity—sometimes you cannot afford to backup all of your data. The first thing that gets excluded from a backup is large, replaceable data such as *Linux ISOs*. :skull_and_crossbones:
 
 This script is meant to give a little bit of security to that replaceable data by recording the directory contents using a standard Unix command: [tree](http://mama.indstate.edu/users/ice/tree/). It will output these trees to a user-defined backup folder, and will email monthly archived backups to cover catastrophic loss.
