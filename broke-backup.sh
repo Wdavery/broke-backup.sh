@@ -13,25 +13,24 @@
 # By default, it will keep 14 daily backups and archive monthly backups indefinitely (as .tar.xz).
 # On the first of the month it will email a .tar.xz archive as an extra backup location. 
 #
-# Folder modification times will be set to 00:00 of the current day for ease of backup directory maintenance.
+# Folder modification times will be set to 00:00 for ease of backup directory maintenance.
 # This allows the cleanup function to operate correctly despite inconsistences in script run times. 
 #
-####################
 # Required dependencies:
 # - tree
-# - mutt
+# - mutt (with working configuration)
 # - xz-utils
-####################
+################################################################################
 #
-# User-defined Options
+# User Config
 #
 ####################
+recipient_email="mail@example.com"
+email_subject="Your Backup Has Arrived! 💾"
+monthly_email_body="Another month, another set of backups:"
+forced_email_body="Monthly emails aren't enough for you?!\nHere's your backup:"
 # Set backup output directory: "/example/location/backup"
-BACKUP_DIR="/path/to/backup/directory"
-# Recipient email
-EMAIL="mail@example.com"
-# Email subject
-SUBJECT="Your Backup Has Arrived! 💾"
+output_dir="/path/to/output/directory"
 # Directories to backup. Add as many as needed; including full path for each
 # Numbering begins at 0, eg. SOURCES[0]="/example/Media/ISOs"
 SOURCES[0]="/example/Media/TV Shows"
@@ -41,26 +40,22 @@ SOURCES[2]="/example/Media/ISOs"
 DEPTH[0]=1
 DEPTH[1]=2
 DEPTH[2]=1
-# Monthly email body (Enclosed in quotes; '\n' for a new line)
-MONTHLY="Another month, another set of backups:"
-# Forced email body
-FORCED="Monthly emails aren't enough for you?!\nHere's your backup:"
 
 ####################
 #
-# Advanced Custom Options
+# Advanced Options
 #
 ####################
 # Use custom tree options per folder (TRUE/FALSE)
 # If you're not sure what this is, leave set to 'FALSE'
 # Enabling this will overwrite DEPTH settings above
 USE_CUSTOM=FALSE
-# Options for tree for each source defined above, eg. CUSTOM_OPTIONS[0]="-d -L 1"
+# Tree options for each source defined above, eg. CUSTOM_OPTIONS[0]="-d -L 1"
 CUSTOM_OPTIONS[0]="-d -L 1"
 CUSTOM_OPTIONS[1]="-a"
 CUSTOM_OPTIONS[2]="-a -L 4"
 
-####################
+################################################################################ END OF CONFIGURATION
 #
 # System Variables
 #
@@ -76,9 +71,9 @@ archived=FALSE
 ####################
 #TODO - migrate to passing $BODY to the function, instead of declaring $BODY prior to calling function
 send_mail () {
-	tar -cJf "$BACKUP_DIR/$today.tar.xz" -C $BACKUP_DIR "$today"
-	echo -e "$BODY" | mutt -s "$SUBJECT" -a "$BACKUP_DIR/$today.tar.xz" -- $EMAIL && echo "Email sent to $EMAIL"
-	rm -r "$BACKUP_DIR/$today.tar.xz"
+	tar -cJf "$output_dir/$today.tar.xz" -C $output_dir "$today"
+	echo -e "$email_body" | mutt -s "$email_subject" -a "$output_dir/$today.tar.xz" -- $recipient_email && echo "Email sent to $recipient_email"
+	rm -r "$output_dir/$today.tar.xz"
 }
 set_tree_options () {
 	if [ $USE_CUSTOM = TRUE ]; then
@@ -99,22 +94,23 @@ set_tree_options () {
 ####################
 # If today's directory already exists, skip backup and force email.
 # Otherwise complete backup and send email if first of the month.
-if [ -d "$BACKUP_DIR/$today" ]; then
+if [ -d "$output_dir/$today" ]; then
 	echo "today's backup already created, skipping. Forcing email:"
+	BODY="$forced_email_body"
 	BODY="$FORCED"
 	send_mail
 else
-	mkdir "$BACKUP_DIR/$today"
+	mkdir "$output_dir/$today"
 	set_tree_options
 	x=0
 	for i in "${SOURCES[@]}"; do
 		source="${i##*/}"
-		tree "$i" ${OPTIONS[$x]} >"$BACKUP_DIR/$today/$source.txt" && echo "$source Completed"
+		tree "$i" ${OPTIONS[$x]} >"$output_dir/$today/$source.txt" && echo "$source Completed"
 		((x++))
 	done
-	touch --date= "$BACKUP_DIR/$today"
+	touch --date= "$output_dir/$today"
 	if [ "$(date +"%d")" = 01 ]; then
-		BODY="$MONTHLY"
+		email_body="$monthly_email_body"
 		send_mail
 	fi
 fi
