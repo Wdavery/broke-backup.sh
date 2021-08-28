@@ -68,32 +68,32 @@ It keeps 14 days of live (uncompressed) backups, and archives monthly backups in
 There are 7 basic options:
 
 ```bash
-BACKUP_DIR="/path/to/backup/directory"
-EMAIL="mail@example.com"
-SUBJECT="Your Backup Has Arrived! 💾"
+recipient_email="mail@example.com"
+email_subject="Your Backup Has Arrived! 💾"
+monthly_email_body="Another month, another set of backups:"
+forced_email_body="Monthly emails aren't enough for you?!\nHere's your backup:"
+output_dir="/path/to/output/directory"
 SOURCES[0]="/example/Media/TV Shows"
 SOURCES[1]="/example/Media/Movies"
 SOURCES[2]="/example/Media/ISOs"
 DEPTH[0]=1
 DEPTH[1]=2
 DEPTH[2]=1
-MONTHLY="Another month, another set of backups:"
-FORCED="Monthly emails aren't enough for you?!\nHere's your backup:"
 ```
 
-- `BACKUP_DIR` - Output directory for backup
+- `recipient_email` - Recipient email address
 
-- `EMAIL` - Recipient email address
+- `email_subject` - The subject for sent emails
 
-- `SUBJECT` - The subject for sent emails
+- `monthly_email_body` - The body of the monthly backup email
+
+- `forced_email_body` - The body of the forced backup email
+
+- `output_dir` - Output directory for backup
 
 - `SOURCES` - A list of folders to backup 
 
 - `DEPTH` - Depth settings for the above folders
-
-- `MONTHLY` - The body of the monthly backup email
-
-- `FORCED` - The body of the forced backup email
 
 ###### Advanced Tree Settings
 
@@ -116,28 +116,22 @@ Suggested config is to set a cron job to run the script daily, shortly after mid
 
 The script has been written to be self-documented and should be fairly easy to follow but it's overall flow is:
 
-1. **if** today's backup already exists, send a forced backup email
-   
-   - You may want this for two reasons:
-     
-     - You've just started using broke-backup.sh and want an off-location backup before the 1st of the month rolls around
-     
-     - Testing your configuration
-
-2. **else** run today's backup to the user-defined backup folder
-
-3. **if** today is the 1st of the month, send a monthly backup email
-
-4. Archive 1st of month backups into the `/Archives` sub-directory as `.tar.xz`
-
-5. Delete backups older than 2 weeks
+- **if** today's backup already exists:
+  - send a forced backup email—You may want this for two reasons:
+    - You've just started using broke-backup.sh and want an off-location backup before the 1st of the month rolls around
+    - Testing your configuration
+- **else** run today's backup to the user-defined backup folder
+  - **if** today is the 1st of the month;
+    - send a monthly backup email; and
+    - Archive a copy into the `/Archives` sub-directory as `.tar.xz`
+- Delete backups older than 2 weeks
 
 ### Current Limitations
 
-- Two folders cannot have the same name
+- Two sources cannot have the same name
   
   - `/example/media/path` and `/example/cloud/path` will both output to **`path.txt`**—the second backup will overwrite the first
 
 - File modification times of the backup will be fudged
   
-  - When a backup is finished, it is backdated to 00:00 of the current day so the cleanup logic works consistently. 
+  - When a backup job is finished, the directory will be backdated to 00:00 of the current day so the cleanup logic works consistently. 
