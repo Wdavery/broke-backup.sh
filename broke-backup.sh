@@ -126,7 +126,11 @@ fi
 # Clean Up
 #
 ####################
+#TODO - move cleanup tasks to functions (cleanup_tasks; archive_monthly, purge_old)
 # Find 1st of month backups, archive as DATE.tar.xz, delete originals
+#TODO - change to better name for $fname
+#TODO - do we need the `:?` in the rmdir command?
+#TODO - add mv && echo to previous line (find | tar) as && 
 while read -r fname; do
 	find "$BACKUP_DIR/$fname" -printf "%P\n" | tar -cJf "$BACKUP_DIR/$fname".tar.xz -C "$BACKUP_DIR/$fname"/ --remove-files -T -
 	mv "$BACKUP_DIR/$fname".tar.xz "$BACKUP_DIR/Archive" && echo "Packed '$fname' into Archives/$fname.tar.xz, removed originals"
@@ -139,7 +143,7 @@ else
 fi
 
 # Find and delete backups older than 13 days
-# Find and delete files older than 13 days
+#TODO - change to better name for $fclean
 while read -r fclean; do
 	rm -r "$BACKUP_DIR/$fclean" && purged=TRUE
 	echo "Removed $fclean - Reason: older than 2 weeks"
