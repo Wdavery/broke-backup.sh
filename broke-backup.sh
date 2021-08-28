@@ -8,18 +8,18 @@
 #                                                             | |
 #                                                             |_|
 # Version 1.1
-
+#
 # This script is designed to maintain a tree-style .txt backup of specified folders.
 # By default, it will keep daily backups for 14 days and archive monthly backups indefinitely (as .tar.xz).
 # On the first of the month it will email a .tar.xz archive as an extra backup location. 
-
+#
 # File modification times will be set to 00:00 of the current day for ease of backup directory maintenance.
-
+#
+####################
 # Required Dependencies:
 # - tree
 # - mutt
 # - xz-utils
-
 ####################
 #
 # User Defined Variables
@@ -39,10 +39,9 @@ FOLDERS=(\
 "/example/Media/TV Shows" \
 "/example/Media/Movies" \
 "/example/Media/ISOs")
-
 # Depth of tree output for each folder defined above, in order, seperated by spaces.
 # Ex. for 3 folders: (1 1 3)
-DEPTH=(1 2 1 )
+DEPTH=(1 2 1)
 # Monthly email body (Enclosed in quotes; '\n' for a new line)
 MONTHLY="Another month, another set of backups:"
 # Forced email body
@@ -65,12 +64,9 @@ CUSTOM_OPTIONS=("-d -L 1" "-d" "-d" "-d" "-d" "-d")
 # System Variables
 #
 ####################
-# Set variable NOW to current date, ie. 2020-02-27.
-NOW=$(date +"%Y-%m-%d")
-# Set defaults
+TODAY=$(date +"%Y-%m-%d")
 PURGED=FALSE
 ARCHIVED=FALSE
-x=0
 
 ####################
 #
@@ -78,15 +74,15 @@ x=0
 #
 ####################
 send_email () {
-	tar -cJf "$BACKUP/$NOW.tar.xz" -C $BACKUP "$NOW"
-	echo -e "$BODY" | mutt -s "$SUBJECT" -a "$BACKUP/$NOW.tar.xz" -- $EMAIL && echo "Email sent to $EMAIL"
-	rm -r "$BACKUP/$NOW.tar.xz"
+	tar -cJf "$BACKUP/$TODAY.tar.xz" -C $BACKUP "$TODAY"
+	echo -e "$BODY" | mutt -s "$SUBJECT" -a "$BACKUP/$TODAY.tar.xz" -- $EMAIL && echo "Email sent to $EMAIL"
+	rm -r "$BACKUP/$TODAY.tar.xz"
 }
-# Set custom options, if enabled
-options_set () {
+set_tree_options () {
 	if [ $USE_CUSTOM = TRUE ]; then
 		OPTIONS=("${CUSTOM_OPTIONS[@]}")
 	else
+		x=0
 		for i in "${DEPTH[@]}"; do
 			OPTIONS[$x]="-L $i"
 			((x++))
@@ -99,27 +95,26 @@ options_set () {
 # Tree Backup
 #
 ####################
-# If today's folder already exists, skip backup and force email. Otherwise complete backup and send email if first of the month.
-if [ -d "$BACKUP/$NOW" ]; then
+# If today's folder already exists, skip backup and force email.
+# Otherwise complete backup and send email if first of the month.
+if [ -d "$BACKUP/$TODAY" ]; then
 	echo "Today's backup already created, skipping. Forcing email:"
 	BODY="$FORCED"
 	send_email
 else
-	options_set
-	mkdir "$BACKUP/$NOW"
+	set_tree_options
+	mkdir "$BACKUP/$TODAY"
 	x=0
 	for i in "${FOLDERS[@]}"; do
 		FOLDER="${i##*/}"
-		tree "$i" ${OPTIONS[$x]} >"$BACKUP/$NOW/$FOLDER.txt" && echo "$FOLDER Completed"
+		tree "$i" ${OPTIONS[$x]} >"$BACKUP/$TODAY/$FOLDER.txt" && echo "$FOLDER Completed"
 		((x++))
 	done
-	touch --date= "$BACKUP/$NOW"
-	# If first of the month, send email
+	touch --date= "$BACKUP/$TODAY"
 	if [ "$(date +"%d")" = 01 ]; then
 		BODY="$MONTHLY"
 		send_email
 	fi
-
 fi
 	
 ####################
@@ -133,7 +128,6 @@ while read -r fname; do
 	mv "$BACKUP/$fname".tar.xz "$BACKUP/Archive" && echo "Packed '$fname' into Archives/$fname.tar.xz, removed originals"
 	rmdir "$BACKUP/${fname:?}" && ARCHIVED=TRUE
 done < <(find $BACKUP -maxdepth 1 -mtime +13 -type d -iname "****-**-01*" -printf "%P\n")
-
 if [ $ARCHIVED = TRUE ]; then
 	echo "Archive completed"
 else
