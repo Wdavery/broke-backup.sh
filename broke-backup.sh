@@ -61,19 +61,17 @@ CUSTOM_OPTIONS[2]="-a -L 4"
 #
 ####################
 today=$(date +"%Y-%m-%d")
-purged=FALSE
-archived=FALSE
+cleaned=FALSE
 
 ####################
 #
 # Functions
 #
 ####################
-#TODO - migrate to passing $BODY to the function, instead of declaring $BODY prior to calling function
+#TODO - migrate to passing email body to the function, instead of declaring $email_body prior to calling function
 send_mail () {
 	tar -cJf "$output_dir/$today.tar.xz" -C $output_dir "$today"
 	echo -e "$email_body" | mutt -s "$email_subject" -a "$output_dir/$today.tar.xz" -- $recipient_email && echo "Email sent to $recipient_email"
-	rm -r "$output_dir/$today.tar.xz"
 }
 set_tree_options () {
 	if [ $USE_CUSTOM = TRUE ]; then
@@ -97,8 +95,7 @@ set_tree_options () {
 if [ -d "$output_dir/$today" ]; then
 	echo "today's backup already created, skipping. Forcing email:"
 	BODY="$forced_email_body"
-	BODY="$FORCED"
-	send_mail
+	send_mail && rm -r "$output_dir/$today.tar.xz"
 else
 	mkdir "$output_dir/$today"
 	set_tree_options
@@ -112,45 +109,23 @@ else
 	if [ "$(date +"%d")" = 01 ]; then
 		email_body="$monthly_email_body"
 		send_mail
+		mv "$output_dir/$today.tar.xz" "$output_dir/Archive" && echo "Moved '$today.tar.xz' into Archives"
 	fi
 fi
 	
 ####################
 #
-# Clean Up
+# Clean-up
 #
 ####################
-#TODO - move cleanup tasks to functions (cleanup_tasks; archive_monthly, purge_old)
-# Find 1st of month backups, archive as DATE.tar.xz, delete originals
-#TODO - change to better name for $fname
-#TODO - do we need the `:?` in the rmdir command?
-#TODO - add mv && echo to previous line (find | tar) as && 
-while read -r fname; do
-	find "$BACKUP_DIR/$fname" -printf "%P\n" | tar -cJf "$BACKUP_DIR/$fname".tar.xz -C "$BACKUP_DIR/$fname"/ --remove-files -T -
-	mv "$BACKUP_DIR/$fname".tar.xz "$BACKUP_DIR/Archive" && echo "Packed '$fname' into Archives/$fname.tar.xz, removed originals"
-	rmdir "$BACKUP_DIR/${fname:?}" && archived=TRUE
-done < <(find $BACKUP_DIR -maxdepth 1 -mtime +13 -type d -iname "****-**-01*" -printf "%P\n")
-if [ $archived = TRUE ]; then
-	echo "Archive completed"
-else
-	echo "No archive required"
-fi
-
+#TODO - move clean-up task to function
 # Find and delete backups older than 13 days
-#TODO - change to better name for $fclean
-while read -r fclean; do
-	rm -r "$BACKUP_DIR/$fclean" && purged=TRUE
-	echo "Removed $fclean - Reason: older than 2 weeks"
-done < <(find $BACKUP_DIR -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
-if [ $purged = TRUE ]; then
-	echo "Purge completed"
+while read -r purgable_backup; do
+	rm -r "$output_dir/$purgable_backup" && cleaned=TRUE
+	echo "Removed $purgable_backup - Reason: older than 2 weeks"
+done < <(find $output_dir -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
+if [ $cleaned = TRUE ]; then
+	echo "Clean-up completed"
 else
-	echo "No purge required"
-fi
-
-# Cleanup Completion
-if [ $purged = TRUE -o $archived = TRUE ]; then
-	echo "All cleanup tasks completed" 
-else
-	echo "No cleanup tasks required"
+	echo "No clean-up required"
 fi
