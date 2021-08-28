@@ -86,12 +86,6 @@ There are 7 basic config settings:
 To accommodate advanced uses, specifying custom tree options per source is supported.
 Setting `USE_CUSTOM=TRUE` will override the `DEPTH` settings of the basic config with `CUSTOM_OPTIONS`
 
-```bash
-CUSTOM_OPTIONS[0]="-d -L 1"
-CUSTOM_OPTIONS[1]="-a"
-CUSTOM_OPTIONS[2]="-a -L 4"
-```
-
 #### Scheduling
 
 broke-backup.sh is designed on a daily job schedule. It will also happily run less often, or purely on a manual basis.
