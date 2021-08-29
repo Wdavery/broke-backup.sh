@@ -6,14 +6,13 @@
 # | |_) | | | (_) |   <  __/      | |_) | (_| | (__|   <| |_| | |_) |\__ \ | | |
 # |_.__/|_|  \___/|_|\_\___|      |_.__/ \__,_|\___|_|\_\\__,_| .__(_)___/_| |_|
 #                                                             | |
-#                                                             |_|
-# Version 1.1
+#                                                             |_| Version 1.1
 #
 # This script is designed to maintain a tree-style .txt backup of specified directories.
 # By default, it will keep 14 daily backups and archive monthly backups indefinitely (as .tar.xz).
 # On the first of the month it will email a .tar.xz archive as an extra backup location. 
 #
-# Folder modification times will be set to 00:00 for ease of backup directory maintenance.
+# Note: Folder modification times will be set to 00:00 for ease of backup directory maintenance.
 # This allows the cleanup function to operate correctly despite inconsistences in script run times. 
 #
 # Required dependencies:
@@ -21,9 +20,7 @@
 # - mutt (with working configuration)
 # - xz-utils
 ################################################################################
-#
 # User Config
-#
 ####################
 recipient_email="mail@example.com"
 email_subject="Your Backup Has Arrived! 💾"
@@ -42,9 +39,7 @@ DEPTH[1]=2
 DEPTH[2]=1
 
 ####################
-#
 # Advanced Options
-#
 ####################
 # Use custom tree options per folder (TRUE/FALSE)
 # If you're not sure what this is, leave set to 'FALSE'
@@ -55,18 +50,14 @@ CUSTOM_OPTIONS[0]="-d -L 1"
 CUSTOM_OPTIONS[1]="-a"
 CUSTOM_OPTIONS[2]="-a -L 4"
 
-################################################################################ END OF CONFIGURATION
-#
+################################################################################ END OF USER CONFIGURATION
 # System Variables
-#
 ####################
 today=$(date +"%Y-%m-%d")
 cleaned=FALSE
 
 ####################
-#
 # Functions
-#
 ####################
 #TODO - migrate to passing email body to the function, instead of declaring $email_body prior to calling function
 send_mail () {
@@ -86,9 +77,7 @@ set_tree_options () {
 }
 
 ####################
-#
 # Tree Backup
-#
 ####################
 # If today's directory already exists, skip backup and force email.
 # Otherwise complete backup and send email if first of the month.
