@@ -75,6 +75,17 @@ set_tree_options () {
 		done
 	fi
 }
+clean_up () {
+	while read -r purgable_backup; do
+		rm -r "$output_dir/$purgable_backup" && cleaned=TRUE
+		echo "Removed $purgable_backup - Reason: older than 2 weeks"
+	done < <(find $output_dir -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
+	if [ $cleaned = TRUE ]; then
+		echo "Clean-up completed"
+	else
+		echo "No clean-up required"
+	fi
+}
 
 ####################
 # Tree Backup
@@ -100,21 +111,5 @@ else
 		send_mail
 		mv "$output_dir/$today.tar.xz" "$output_dir/Archive" && echo "Moved '$today.tar.xz' into Archives"
 	fi
-fi
-	
-####################
-#
-# Clean-up
-#
-####################
-#TODO - move clean-up task to function
-# Find and delete backups older than 13 days
-while read -r purgable_backup; do
-	rm -r "$output_dir/$purgable_backup" && cleaned=TRUE
-	echo "Removed $purgable_backup - Reason: older than 2 weeks"
-done < <(find $output_dir -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
-if [ $cleaned = TRUE ]; then
-	echo "Clean-up completed"
-else
-	echo "No clean-up required"
+	clean_up
 fi
