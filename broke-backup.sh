@@ -53,10 +53,9 @@ CUSTOM_OPTIONS[2]="-a -L 4"
 ################################################################################ END OF USER CONFIGURATION
 # Functions
 ####################
-#TODO - migrate to passing email body to the function, instead of declaring $email_body prior to calling function
 send_mail () {
 	tar -cJf "$output_dir/$today.tar.xz" -C $output_dir "$today"
-	echo -e "$email_body" | mutt -s "$email_subject" -a "$output_dir/$today.tar.xz" -- $recipient_email && echo "Email sent to $recipient_email"
+	echo -e "$1" | mutt -s "$email_subject" -a "$output_dir/$today.tar.xz" -- $recipient_email && echo "Email sent to $recipient_email"
 }
 set_tree_options () {
 	if [ $USE_CUSTOM = TRUE ]; then
@@ -90,8 +89,7 @@ clean_up () {
 today=$(date +"%Y-%m-%d")
 if [ -d "$output_dir/$today" ]; then
 	echo "today's backup already created, skipping. Forcing email:"
-	email_body="$forced_email_body"
-	send_mail && rm -r "$output_dir/$today.tar.xz"
+	send_mail "$forced_email_body" && rm -r "$output_dir/$today.tar.xz"
 else
 	mkdir "$output_dir/$today"
 	set_tree_options
@@ -103,8 +101,7 @@ else
 	done
 	touch --date= "$output_dir/$today"
 	if [ "$(date +"%d")" = 01 ]; then
-		email_body="$monthly_email_body"
-		send_mail
+		send_mail "$monthly_email_body"
 		mv "$output_dir/$today.tar.xz" "$output_dir/Archive" && echo "Moved '$today.tar.xz' into Archives"
 	fi
 	clean_up
