@@ -51,12 +51,6 @@ CUSTOM_OPTIONS[1]="-a"
 CUSTOM_OPTIONS[2]="-a -L 4"
 
 ################################################################################ END OF USER CONFIGURATION
-# System Variables
-####################
-today=$(date +"%Y-%m-%d")
-cleaned=FALSE
-
-####################
 # Functions
 ####################
 #TODO - migrate to passing email body to the function, instead of declaring $email_body prior to calling function
@@ -76,6 +70,7 @@ set_tree_options () {
 	fi
 }
 clean_up () {
+	cleaned=FALSE
 	while read -r purgable_backup; do
 		rm -r "$output_dir/$purgable_backup" && cleaned=TRUE
 		echo "Removed $purgable_backup - Reason: older than 2 weeks"
@@ -92,9 +87,10 @@ clean_up () {
 ####################
 # If today's directory already exists, skip backup and force email.
 # Otherwise complete backup and send email if first of the month.
+today=$(date +"%Y-%m-%d")
 if [ -d "$output_dir/$today" ]; then
 	echo "today's backup already created, skipping. Forcing email:"
-	BODY="$forced_email_body"
+	email_body="$forced_email_body"
 	send_mail && rm -r "$output_dir/$today.tar.xz"
 else
 	mkdir "$output_dir/$today"
