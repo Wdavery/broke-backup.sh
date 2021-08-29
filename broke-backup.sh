@@ -10,7 +10,7 @@
 #
 # This script is designed to maintain a tree-style .txt backup of specified directories.
 # By default, it will keep 14 daily backups and archive monthly backups indefinitely (as .tar.xz).
-# On the first of the month it will email a .tar.xz archive as an extra backup location. 
+# On the first of the month it will email a .tar.xz archive to serve as a 'cloud' location. 
 #
 # Note: Folder modification times will be set to 00:00 for ease of backup directory maintenance.
 # This allows the cleanup function to operate correctly despite inconsistences in script run times. 
@@ -23,9 +23,9 @@
 # User Config
 ####################
 recipient_email="mail@example.com"
-email_subject="Your Backup Has Arrived! 💾"
-monthly_email_body="Another month, another set of backups:"
-forced_email_body="Monthly emails aren't enough for you?!\nHere's your backup:"
+email_subject="Your [broke]backup has arrived! 💾"
+monthly_email_body="Another month, another set of [broke]backups:"
+forced_email_body="Monthly emails aren't enough for you?!\nHere's your [broke]backup:"
 # Set backup output directory: "/example/location/backup"
 output_dir="/path/to/output/directory"
 # Directories to backup. Add as many as needed; including full path for each
@@ -43,8 +43,8 @@ DEPTH[2]=1
 ####################
 # Use custom tree options per folder (TRUE/FALSE)
 # If you're not sure what this is, leave set to 'FALSE'
-# Enabling this will overwrite DEPTH settings above
-USE_CUSTOM=FALSE
+# Enabling this will overwrite $DEPTH settings above
+use_custom=FALSE
 # Tree options for each source defined above, eg. CUSTOM_OPTIONS[0]="-d -L 1"
 CUSTOM_OPTIONS[0]="-d -L 1"
 CUSTOM_OPTIONS[1]="-a"
@@ -58,18 +58,20 @@ send_mail () {
 	echo -e "$1" | mutt -s "$email_subject" -a "$output_dir/$today.tar.xz" -- $recipient_email && echo "Email sent to $recipient_email"
 }
 set_tree_options () {
-	if [ $USE_CUSTOM = TRUE ]; then
-		OPTIONS=("${CUSTOM_OPTIONS[@]}")
+	if [ $use_custom = TRUE ]; then
+		tree_options=("${CUSTOM_OPTIONS[@]}")
+		echo "Custom tree options enabled - Overriding depth values"
 	else
 		x=0
 		for i in "${DEPTH[@]}"; do
-			OPTIONS[$x]="-L $i"
+			tree_options[$x]="-L $i"
 			((x++))
 		done
 	fi
 }
 clean_up () {
 	cleaned=FALSE
+	echo "####################"\ echo "Running clean-up"
 	while read -r purgable_backup; do
 		rm -r "$output_dir/$purgable_backup" && cleaned=TRUE
 		echo "Removed $purgable_backup - Reason: older than 2 weeks"
@@ -80,23 +82,23 @@ clean_up () {
 		echo "No clean-up required"
 	fi
 }
-
 ####################
 # Tree Backup
 ####################
-# If today's directory already exists, skip backup and force email.
-# Otherwise complete backup and send email if first of the month.
 today=$(date +"%Y-%m-%d")
+echo "broke-backup.sh v1.1"\ "####################"
 if [ -d "$output_dir/$today" ]; then
-	echo "today's backup already created, skipping. Forcing email:"
+	echo "Existing directory found ($output_dir/$today)—skipping backup and forcing email"
 	send_mail "$forced_email_body" && rm -r "$output_dir/$today.tar.xz"
 else
+	echo "Today's directory not found ($today)—starting backup"
 	mkdir "$output_dir/$today"
 	set_tree_options
 	x=0
 	for i in "${SOURCES[@]}"; do
 		source="${i##*/}"
-		tree "$i" ${OPTIONS[$x]} >"$output_dir/$today/$source.txt" && echo "$source Completed"
+		echo "Preparing $source backup"
+		tree "$i" ${OPTIONS[$x]} >"$output_dir/$today/$source.txt" && echo "$source completed"
 		((x++))
 	done
 	touch --date= "$output_dir/$today"
@@ -106,3 +108,4 @@ else
 	fi
 	clean_up
 fi
+echo "####################"\ echo "Job completed. Thank you for using broke-backup.sh"
