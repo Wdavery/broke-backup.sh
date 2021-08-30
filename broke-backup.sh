@@ -71,7 +71,7 @@ set_tree_options () {
 }
 clean_up () {
 	cleaned=FALSE
-	echo "####################"\ echo "Running clean-up"
+	echo "--------------------"; echo "Running clean-up"
 	while read -r purgable_backup; do
 		rm -r "$output_dir/$purgable_backup" && cleaned=TRUE
 		echo "Removed $purgable_backup - Reason: older than 2 weeks"
@@ -86,19 +86,19 @@ clean_up () {
 # Tree Backup
 ####################
 today=$(date +"%Y-%m-%d")
-echo "broke-backup.sh v1.1"\ "####################"
+echo "####################"; echo "broke-backup.sh v1.1"; echo "####################"
 if [ -d "$output_dir/$today" ]; then
 	echo "Existing directory found ($output_dir/$today)—skipping backup and forcing email"
 	send_mail "$forced_email_body" && rm -r "$output_dir/$today.tar.xz"
 else
-	echo "Today's directory not found ($today)—starting backup"
+	echo "Today's directory not found ($today)—starting backup"; echo "--------------------"
 	mkdir "$output_dir/$today"
 	set_tree_options
 	x=0
 	for i in "${SOURCES[@]}"; do
 		source="${i##*/}"
-		echo "Preparing $source backup"
-		tree "$i" ${OPTIONS[$x]} >"$output_dir/$today/$source.txt" && echo "$source completed"
+		echo "Processing: '$source'"
+		tree "$i" ${OPTIONS[$x]} >"$output_dir/$today/$source.txt" && echo "Completed: '$source'"
 		((x++))
 	done
 	touch --date= "$output_dir/$today"
@@ -108,4 +108,4 @@ else
 	fi
 	clean_up
 fi
-echo "####################"\ echo "Job completed. Thank you for using broke-backup.sh"
+echo "--------------------"; echo "Job completed. Thank you for using broke-backup.sh"
