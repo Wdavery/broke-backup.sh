@@ -74,7 +74,7 @@ clean_up () {
 	echo "--------------------"; echo "Running clean-up"
 	while read -r purgable_backup; do
 		rm -r "$output_dir/$purgable_backup" && cleaned=TRUE
-		echo "Removed $purgable_backup - Reason: older than 2 weeks"
+		echo "Removed old backup: $purgable_backup"
 	done < <(find $output_dir -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
 	if [ $cleaned = TRUE ]; then
 		echo "Clean-up completed"
