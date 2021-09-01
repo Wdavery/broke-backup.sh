@@ -98,7 +98,7 @@ else
 	for i in "${SOURCES[@]}"; do
 		source="${i##*/}"
 		echo "Processing: '$source'"
-		tree "$i" ${OPTIONS[$x]} >"$output_dir/$today/$source.txt" && echo "Completed: '$source'"
+		tree "$i" ${tree_options[$x]} >"$output_dir/$today/$source.txt" && echo "Completed: '$source'"
 		((x++))
 	done
 	touch --date= "$output_dir/$today"
