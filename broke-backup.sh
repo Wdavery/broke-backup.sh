@@ -1,151 +1,111 @@
 #!/bin/bash
-# Version 1.0
-#This script is designed to maintain a tree-style .txt backup of specified folders.
-#By default, it will keep daily backups for 14 days and archive monthly backups indefinitely (as .tar.xz).
-#On the first of the month it will email a .tar.xz archive as an extra backup location. 
-
-#File modification times will be set to 00:00 of the current day for ease of backup directory maintenance.
-
-# Required Dependencies:
+#  _               _               _                _                     _
+# | |             | |             | |              | |                   | |
+# | |__  _ __ ___ | | _____ ______| |__   __ _  ___| | ___   _ _ __   ___| |__
+# | '_ \| '__/ _ \| |/ / _ \______| '_ \ / _` |/ __| |/ / | | | '_ \ / __| '_ \
+# | |_) | | | (_) |   <  __/      | |_) | (_| | (__|   <| |_| | |_) |\__ \ | | |
+# |_.__/|_|  \___/|_|\_\___|      |_.__/ \__,_|\___|_|\_\\__,_| .__(_)___/_| |_|
+#                                                             | |
+#                                                             |_| Version 1.1
+#
+# This script is designed to maintain a tree-style .txt backup of specified directories.
+# By default, it will keep 14 daily backups and archive monthly backups indefinitely (as .tar.xz).
+# On the first of the month it will email a .tar.xz archive to serve as a 'cloud' location. 
+#
+# Note: Folder modification times will be set to 00:00 for ease of backup directory maintenance.
+# This allows the cleanup function to operate correctly despite inconsistences in script run times. 
+#
+# Required dependencies:
 # - tree
-# - mutt
+# - mutt (with working configuration)
 # - xz-utils
+################################################################################
+# User Config
+####################
+recipient_email="mail@example.com"
+email_subject="Your [broke]backup has arrived! 💾"
+monthly_email_body="Another month, another set of [broke]backups:"
+forced_email_body="Monthly emails aren't enough for you?!\nHere's your [broke]backup:"
+# Set backup output directory: "/example/location/backup"
+output_dir="/path/to/output/directory"
+# Directories to backup. Add as many as needed; including full path for each
+# Numbering begins at 0, eg. SOURCES[0]="/example/Media/ISOs"
+SOURCES[0]="/example/Media/TV Shows"
+SOURCES[1]="/example/Media/Movies"
+SOURCES[2]="/example/Media/ISOs"
+# Depth of tree output for each source defined above, eg. DEPTH[0]=1
+DEPTH[0]=1
+DEPTH[1]=2
+DEPTH[2]=1
 
 ####################
-#
-# User Defined Variables
-#
+# Advanced Options
 ####################
-#Set backup directory: "/example/location/backup"
-BACKUP="/path/to/backup/directory"
-#Recipient email
-EMAIL=mail@example.com
-#Email subject
-SUBJECT="Your Backup Has Arrived! 💾"
-#Folders to backup. Add as many as needed; including full path for each.
-#One per line, and each enclosed in quotes                  "/example/folder/1" \
-#All but last line need to end with a space and backslash   "/example/folder/2" \
-#Last line ends in closing parenthesis                      "/example/folder/3")
-FOLDERS=(\
-"/example/Media/TV Shows" \
-"/example/Media/Movies" \
-"/example/Media/ISOs")
+# Use custom tree options per folder (TRUE/FALSE)
+# If you're not sure what this is, leave set to 'FALSE'
+# Enabling this will overwrite $DEPTH settings above
+use_custom=FALSE
+# Tree options for each source defined above, eg. CUSTOM_OPTIONS[0]="-d -L 1"
+CUSTOM_OPTIONS[0]="-d -L 1"
+CUSTOM_OPTIONS[1]="-a"
+CUSTOM_OPTIONS[2]="-a -L 4"
 
-#Depth of tree output for each folder defined above, in order, seperated by spaces.
-#Ex. for 3 folders: (1 1 3)
-DEPTH=(1 2 1 )
-#Monthly email body (Enclosed in quotes; '\n' for a new line)
-MONTHLY="Another month, another set of backups:"
-#Forced email body
-FORCED="Monthly emails aren't enough for you?!\nHere's your backup:"
-
-####################
-#
-# Advanced Custom Options
-#
-####################
-#Use custom tree options per folder (TRUE/FALSE)
-#If you're not sure what this is, leave set to 'FALSE'
-#Enabling this will overwrite DEPTH settings above
-USE_CUSTOM=FALSE
-#Separated by spaces, enclosed in quotes '("-d -L 1" "-a" "-a -L 4")'
-CUSTOM_OPTIONS=("-d -L 1" "-d" "-d" "-d" "-d" "-d")
-
-####################
-#
-# System Variables
-#
-####################
-#Set variable NOW to current date, ie. 2020-02-27.
-NOW=$(date +"%Y-%m-%d")
-#Set defaults
-PURGED=FALSE
-ARCHIVED=FALSE
-x=0
-
-####################
-#
+################################################################################ END OF USER CONFIGURATION
 # Functions
-#
 ####################
-send_email () {
-	tar -cJf "$BACKUP/$NOW.tar.xz" -C $BACKUP "$NOW"
-	echo -e "$BODY" | mutt -s "$SUBJECT" -a "$BACKUP/$NOW.tar.xz" -- $EMAIL && echo "Email sent to $EMAIL"
-	rm -r "$BACKUP/$NOW.tar.xz"
+send_mail () {
+	tar -cJf "$output_dir/$today.tar.xz" -C $output_dir "$today"
+	echo -e "$1" | mutt -s "$email_subject" -a "$output_dir/$today.tar.xz" -- $recipient_email && echo "Email sent to $recipient_email"
 }
-#Set custom options, if enabled
-options_set () {
-	if [ $USE_CUSTOM = TRUE ]; then
-		OPTIONS=("${CUSTOM_OPTIONS[@]}")
+set_tree_options () {
+	if [ $use_custom = TRUE ]; then
+		tree_options=("${CUSTOM_OPTIONS[@]}")
+		echo "Custom tree options enabled - Overriding depth values"
 	else
+		x=0
 		for i in "${DEPTH[@]}"; do
-			OPTIONS[$x]="-L $i"
+			tree_options[$x]="-L $i"
 			((x++))
 		done
 	fi
 }
-
+clean_up () {
+	cleaned=FALSE
+	echo "--------------------"; echo "Running clean-up"
+	while read -r purgable_backup; do
+		rm -r "$output_dir/$purgable_backup" && cleaned=TRUE
+		echo "Removed old backup: $purgable_backup"
+	done < <(find $output_dir -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -printf "%P\n")
+	if [ $cleaned = TRUE ]; then
+		echo "Clean-up completed"
+	else
+		echo "No clean-up required"
+	fi
+}
 ####################
-#
 # Tree Backup
-#
 ####################
-#If today's folder already exists, skip backup and force email. Otherwise complete backup and send email if first of the month.
-if [ -d "$BACKUP/$NOW" ]; then
-	echo "Today's backup already created, skipping. Forcing email:"
-	BODY="$FORCED"
-	send_email
+today=$(date +"%Y-%m-%d")
+echo "####################"; echo "broke-backup.sh v1.1"; echo "####################"
+if [ -d "$output_dir/$today" ]; then
+	echo "Existing directory found ($output_dir/$today)—skipping backup and forcing email"
+	send_mail "$forced_email_body" && rm -r "$output_dir/$today.tar.xz"
 else
-	options_set
-	mkdir "$BACKUP/$NOW"
+	echo "Today's directory not found ($today)—starting backup"; echo "--------------------"
+	mkdir "$output_dir/$today"
+	set_tree_options
 	x=0
-	for i in "${FOLDERS[@]}"; do
-		FOLDER="${i##*/}"
-		tree "$i" ${OPTIONS[$x]} >"$BACKUP/$NOW/$FOLDER.txt" && echo "$FOLDER Completed"
-		touch --date="" "$BACKUP/$NOW/$FOLDER.txt"
+	for i in "${SOURCES[@]}"; do
+		source="${i##*/}"
+		echo "Processing: '$source'"
+		tree "$i" ${tree_options[$x]} >"$output_dir/$today/$source.txt" && echo "Completed: '$source'"
 		((x++))
 	done
-	touch --date= "$BACKUP/$NOW"
-	#If first of the month, send email
+	touch --date= "$output_dir/$today"
 	if [ "$(date +"%d")" = 01 ]; then
-		BODY="$MONTHLY"
-		send_email
+		send_mail "$monthly_email_body"
+		mv "$output_dir/$today.tar.xz" "$output_dir/Archive" && echo "Moved '$today.tar.xz' into Archives"
 	fi
-
+	clean_up
 fi
-	
-####################
-#
-# Clean Up
-#
-####################
-#Find and delete files older than 13 days that are NOT the first day of a month
-while read -r fclean; do
-	rm -r "$BACKUP/$fclean" && PURGED=TRUE
-	echo "Removed $fclean - Reason: older than 2 weeks and not 1st of month"
-done < <(find $BACKUP -maxdepth 1 -mtime +13 -type d -iname "****-**-**" -not -iname "****-**-01*" -printf "%P\n")
-if [ $PURGED = TRUE ]; then
-	echo "Purge completed"
-else
-	echo "No purge required"
-fi
-
-#Find 1st of month backups, archive as DATE.tar.xz, delete originals
-while read -r fname; do
-	find "$BACKUP/$fname" -printf "%P\n" | tar -cJf "$BACKUP/$fname".tar.xz -C "$BACKUP/$fname"/ --remove-files -T -
-	mv "$BACKUP/$fname".tar.xz "$BACKUP/Archive" && echo "Packed '$fname' into Archives/$fname.tar.xz, removed originals"
-	rmdir "$BACKUP/${fname:?}" && ARCHIVED=TRUE
-done < <(find $BACKUP -maxdepth 1 -mtime +13 -type d -iname "****-**-01*" -printf "%P\n")
-
-if [ $ARCHIVED = TRUE ]; then
-	echo "Archive completed"
-else
-	echo "No archive required"
-fi
-
-#Cleanup Completion
-if [ $PURGED = TRUE -o $ARCHIVED = TRUE ]; then
-	echo "All cleanup tasks completed" 
-else
-	echo "No cleanup tasks required"
-fi
+echo "--------------------"; echo "Job completed. Thank you for using broke-backup.sh"
