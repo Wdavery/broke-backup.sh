@@ -10,44 +10,31 @@
 ```
 ***broke-backup.sh*** was born out of necessity—sometimes you cannot afford to backup all of your data. The first thing that gets excluded from a backup is large, replaceable data such as *Linux ISOs*. :skull_and_crossbones:
 
-This script is meant to give a little bit of security to that replaceable data by recording the directory contents using a standard Unix command: [tree](http://mama.indstate.edu/users/ice/tree/). It will output these trees to a user-defined backup folder, and will email monthly archived backups to cover catastrophic loss.
+This script is meant to give a little bit of security to that replaceable data by recording the directory contents using a basic Unix command: [tree](http://mama.indstate.edu/users/ice/tree/). It will output these directory trees to a user-defined backup folder, and email monthly archived backups.
 
-If you're unfamiliar with `tree`, don't worry; this script takes care of the most common use-cases for you. The core concept is that it recursively lists directory contents, and can be output to a text file. For advanced users, it has many custom options that can be found at its [man page](http://mama.indstate.edu/users/ice/tree/tree.1.html). 
+Familiarity with `tree` is not needed; this script takes care of the most common use-case. The core concept is that it recursively lists directory contents, and can be output to a text file. For advanced users, it has many custom options that can be found at its [man page](http://mama.indstate.edu/users/ice/tree/tree.1.html). 
 
-**Disclaimer:** Despite 'backup' being in the name, this will not protect your data. This is essentially a disaster recovery assistant. If/when disaster strikes, you may lose your files, but you will know exactly *what* you lost.
+**Disclaimer:** Despite 'backup' being in the name, **this will not protect your data**. It will save a text-only list of files and directories, which amounts to being a disaster recovery assistant. If/when disaster strikes you might lose your files, but you *will know exactly what you lost* so you can replace the data.
 
 #### Example Tree Output
 
-This example is a movie folder set to a depth of 2 (list the `Movies` folder and the contents of it's direct sub-folders; `1` and `2`). In this script, this text is output to `Movies.txt`
+This truncated example is a Calibre library folder set to a depth of 2 (Show the children of the `Comics` folder and their sub-folders; `Alan Moore` and `Andrew Donkin`). In this script, this text is output to `Comics.txt`
 
 ```
-/sharedfolders/DrivePool/Media/Movies
-├── 1
-│   ├── 10,000 BC (2008)
-│   ├── 101 Dalmatians (1996)
-│   ├── 101 Dalmatians II Patchs London Adventure (2003)
-│   ├── 102 Dalmatians (2000)
-│   ├── 10 Things I Hate About You (1999)
-│   ├── 13th (2016)
-│   ├── 17 Again (2009)
-│   └── 1917 (2019)
-├── 2
-│   ├── 2001 A Space Odyssey (1968)
-│   ├── 2012 (2009)
-│   ├── 2036 Nexus Dawn (2017)
-│   ├── 2048 Nowhere to Run (2017)
-│   ├── 21 Bridges (2019)
-│   ├── 21 Jump Street (2012)
-│   ├── 22 Jump Street (2014)
-│   ├── 24 Hour Party People (2002)
-│   └── 2 Fast 2 Furious (2003)
+/path/to/Comics
+├── Alan Moore
+│   └── Watchmen (166)
+├── Andrew Donkin
+│   ├── Artemis Fowl (223)
+│   ├── The Arctic Incident (224)
+│   ├── The Eternity Code (226)
+│   └── The Opal Deception (225)
+...
 ```
-
-*Any similarity to real films is entirely coincidental.* :upside_down_face: 
 
 #### Example Backup Folder
 
-This is my personal backup folder, that has been running since October 2020, as of July 2021. It backs up 6 locations—14 TiB of 40k files—into a 4.2 MiB Backup directory. A single archived backup is ~60 KiB.
+This is my personal backup folder, that has been running since October 2020, as of August 2021. It backs up 6 locations—14 TiB of 40k files—into a 4 MiB Backup directory. A single archived backup is ~60 KiB.
 
 It keeps 14 days of live (uncompressed) backups, and archives monthly backups indefinitely. 
 
@@ -84,7 +71,7 @@ There are 7 basic config settings:
 ###### Advanced Tree Settings
 
 To accommodate advanced uses, specifying custom tree options per source is supported.
-Setting `USE_CUSTOM=TRUE` will override the `DEPTH` settings of the basic config with `CUSTOM_OPTIONS`
+Setting `use_custom=TRUE` will override the `DEPTH` settings of the basic config with `CUSTOM_OPTIONS`
 
 #### Scheduling
 
